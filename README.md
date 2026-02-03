@@ -10,6 +10,7 @@
 5. insert info about application state and state changes' times
 6. also move read mails into special mail directory (so I wont see them)
 7. do some logs
+9. add a webhook/discord bot
 8. host the app somewhere
 
 ## Interesting sources:
