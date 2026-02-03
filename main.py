@@ -5,6 +5,13 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
+from google import genai
+
+from dotenv import load_dotenv
+load_dotenv() 
+
+client = genai.Client()
+
 # If modifying these scopes, delete the file token.json.
 SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
 
@@ -48,7 +55,24 @@ def main():
             msg = (
                 service.users().messages().get(userId="me", id=message["id"]).execute()
             )
-            print(f'  Subject: {msg["snippet"]}')
+
+            subject = msg["snippet"]
+            model = "gemini-3-flash-preview"
+            contents = f"Is it work related? Answer shortly using format: 'work: <company name>' if yes, or 'no' otherwise. The title to read is: '{subject}'"
+            calculated = False
+            while not calculated:
+              try:
+                response = client.models.generate_content(
+                  model=model,
+                  contents=contents
+                )
+              except genai.errors.ServerError:
+                pass
+              else:
+                calculated = True
+
+            print(response.text)
+
 
     except HttpError as error:
         # TODO(developer) - Handle errors from gmail API.
