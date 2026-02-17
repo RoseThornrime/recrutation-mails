@@ -11,6 +11,9 @@ from googleapiclient.errors import HttpError
 
 from google import genai
 
+# import aiogoogle
+import asyncio
+
 from dotenv import load_dotenv
 
 # If modifying these scopes, delete the file token.json.
@@ -78,14 +81,14 @@ def get_messages(gmail_service):
     return message_details
 
 
-def analyze_gemini(topic, content, client):
-    model = "gemini-2.0-flash-lite"
+async def analyze_gemini(topic, content, client):
+    model = "gemini-3-flash-preview"
     contents = (f"Is it work related? Answer shortly using format:",
                 " 'work: <company name>' if yes, or 'no' otherwise.",
                 f"The title to read is: '{topic}'.",
                 f"The content to read is: '{content}.") 
     try:
-        response = client.models.generate_content(
+        response = await client.models.generate_content(
             model=model,
             contents=contents
         )
@@ -94,13 +97,13 @@ def analyze_gemini(topic, content, client):
     return response.text
 
 
-def main():
+async def main():
     load_dotenv() 
     creds = get_credentials()
 
     gmail_service = build("gmail", "v1", credentials=creds)
 
-    client = genai.Client()
+    client = genai.Client().aio
 
 
     try:
@@ -109,8 +112,8 @@ def main():
             print("No messages found.")
             return
         
-        for message in messages:
-            print(analyze_gemini(message["topic"], message["content"], client))
+        for message in messages[:1]:
+            print(await analyze_gemini(message["topic"], message["content"], client))
             time.sleep(5)
 
     except HttpError as error:
@@ -118,4 +121,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
