@@ -1,8 +1,19 @@
 # automate mails
+## Introduction
+This is a script that helps me automate reading emails when I'm trying to find a job, cause it's easy to forget about some recrutation tasks/tests or to answer sometimes.
+
+## Usage
+You should have a virtual environment created, via `python3 -m venv venv`. Also, you should get the Gemini API key and store it into the `.env` file. I won't cover the Google Cloud configuration here, but the app should be registered and authorized there.
+
+```bash
+source venv/bin/activate
+python3 main.py
+```
+
 ## TODO:
 1. ~~read mails~~
-2. rewrite to async
-3. categorize mails
+2. simple gemini support for mails' categorizing
+3. rewrite to async
 4. if a mail is related to work, classify it by:
     - position
     - location
