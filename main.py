@@ -44,6 +44,19 @@ def extract_content(message):
     return parsed.get_content()
 
 
+async def get_message_details(google, gmail, message_id):
+    message = await google.as_user(
+            (gmail
+             .users
+             .messages
+             .get(userId="me", id=message_id["id"], format="raw"))
+            )
+    return {
+        "topic": message["snippet"],
+        "content": extract_content(message)
+    }
+
+
 async def get_messages(google, gmail):
     results = await google.as_user(
         (gmail
@@ -52,21 +65,10 @@ async def get_messages(google, gmail):
          .list(userId="me", labelIds=["INBOX"]))
     )
     message_ids = results.get("messages", [])
-    message_details = []
+    message_tasks = []
     for message_id in message_ids:
-        message = await google.as_user(
-            (gmail
-             .users
-             .messages
-             .get(userId="me", id=message_id["id"], format="raw"))
-        )
-        message_details.append(
-            {
-                "topic": message["snippet"],
-                "content": extract_content(message)
-            }
-        )
-    return message_details
+        message_tasks.append(get_message_details(google, gmail, message_id))
+    return await asyncio.gather(*message_tasks)
 
 
 async def analyze_gemini(topic, content, gemini):
