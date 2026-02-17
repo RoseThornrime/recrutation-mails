@@ -5,7 +5,7 @@ import time
 
 from google import genai
 from aiogoogle import Aiogoogle
-from aiogoogle.auth.creds import (UserCreds, ClientCreds, ApiKey)
+from aiogoogle.auth.creds import (UserCreds, ClientCreds)
 import asyncio
 import yaml
 
