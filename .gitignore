@@ -2,4 +2,4 @@ venv/
 credentials.json
 token.json
 .vscode/
-.env
+keys.yaml

@@ -1,44 +1,33 @@
-import os.path
+import os
 from base64 import urlsafe_b64decode
 import email
 import time
 
-from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
-
 from google import genai
-
-# import aiogoogle
+from aiogoogle import Aiogoogle
+from aiogoogle.auth.creds import (UserCreds, ClientCreds, ApiKey)
 import asyncio
-
-from dotenv import load_dotenv
-
-# If modifying these scopes, delete the file token.json.
-SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
+import yaml
 
 
+def get_user_creds(config):
+    return UserCreds(
+        access_token=config["user_creds"]["access_token"],
+        refresh_token=config["user_creds"]["refresh_token"],
+        expires_at=config["user_creds"]["expires_at"] or None,
+    )
 
-def get_credentials():
-    creds = None
-    # The file token.json stores the user's access and refresh tokens, and is
-    # created automatically when the authorization flow completes for the first
-    # time.
-    if os.path.exists("token.json"):
-        creds = Credentials.from_authorized_user_file("token.json", SCOPES)
-    # If there are no (valid) credentials available, let the user log in.
-    if not creds or not creds.valid:
-        if creds and creds.valid:
-            creds.refresh(Request())
-        else:
-            flow = InstalledAppFlow.from_client_secrets_file("credentials.json", SCOPES)
-            creds = flow.run_local_server(port=0)
-        # Save the credentials for the next run
-        with open("token.json", "w") as token:
-            token.write(creds.to_json())
-    return creds
+
+def get_client_creds(config):
+    return ClientCreds(
+        client_id=config["client_creds"]["client_id"],
+        client_secret=config["client_creds"]["client_secret"],
+        scopes=config["client_creds"]["scopes"],
+    )
+
+
+def set_gemini_key(config):
+    os.environ["GEMINI_API_KEY"] = config["gemini_key"]
 
 
 def extract_content(message):
@@ -55,23 +44,22 @@ def extract_content(message):
     return parsed.get_content()
 
 
-def get_messages(gmail_service):
-    # Call the Gmail API
-    results = (
-        (gmail_service
-            .users()
-            .messages()
-            .list(userId="me", labelIds=["INBOX"])
-            .execute())
+async def get_messages(google, gmail):
+    results = await google.as_user(
+        (gmail
+         .users
+         .messages
+         .list(userId="me", labelIds=["INBOX"]))
     )
     message_ids = results.get("messages", [])
     message_details = []
     for message_id in message_ids:
-        message = (gmail_service
-            .users()
-            .messages()
-            .get(userId="me", id=message_id["id"], format="raw")
-            .execute())
+        message = await google.as_user(
+            (gmail
+             .users
+             .messages
+             .get(userId="me", id=message_id["id"], format="raw"))
+        )
         message_details.append(
             {
                 "topic": message["snippet"],
@@ -81,14 +69,14 @@ def get_messages(gmail_service):
     return message_details
 
 
-async def analyze_gemini(topic, content, client):
+async def analyze_gemini(topic, content, gemini):
     model = "gemini-3-flash-preview"
     contents = (f"Is it work related? Answer shortly using format:",
                 " 'work: <company name>' if yes, or 'no' otherwise.",
                 f"The title to read is: '{topic}'.",
                 f"The content to read is: '{content}.") 
     try:
-        response = await client.models.generate_content(
+        response = await gemini.models.generate_content(
             model=model,
             contents=contents
         )
@@ -98,26 +86,27 @@ async def analyze_gemini(topic, content, client):
 
 
 async def main():
-    load_dotenv() 
-    creds = get_credentials()
+    with open("keys.yaml", "r") as stream:
+        config = yaml.load(stream, Loader=yaml.FullLoader)
 
-    gmail_service = build("gmail", "v1", credentials=creds)
+    user_creds = get_user_creds(config)
+    client_creds = get_client_creds(config)
 
-    client = genai.Client().aio
+    set_gemini_key(config)
+    gemini = genai.Client().aio
+    async with Aiogoogle(user_creds=user_creds, client_creds=client_creds) as google:
+        gmail = await google.discover("gmail", "v1")
 
-
-    try:
-        messages = get_messages(gmail_service)
+        messages = await get_messages(google, gmail)
         if not messages:
             print("No messages found.")
             return
         
         for message in messages[:1]:
-            print(await analyze_gemini(message["topic"], message["content"], client))
-            time.sleep(5)
-
-    except HttpError as error:
-        print(f"An error occurred: {error}")
+            print(await analyze_gemini(message["topic"],
+                                       message["content"],
+                                       gemini))
+            # time.sleep(5)
 
 
 if __name__ == "__main__":

@@ -3,7 +3,7 @@
 This is a script that helps me automate reading emails when I'm trying to find a job, cause it's easy to forget about some recrutation tasks/tests or to answer sometimes.
 
 ## Usage
-You should have a virtual environment created, via `python3 -m venv venv`. Also, you should get the Gemini API key and store it into the `.env` file. I won't cover the Google Cloud configuration here, but the app should be registered and authorized there.
+You should have a virtual environment created, via `python3 -m venv venv`. Also, you should get all needed secrets and credentials and store it into the `keys.yaml` file.
 
 ```bash
 source venv/bin/activate
