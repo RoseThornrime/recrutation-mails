@@ -1,19 +1,31 @@
 from google import genai
 from pydantic import BaseModel, Field
+from enum import Enum
 from typing import Optional
 
 
-class RecrutationStatus(BaseModel):
+class ApplicationStatus(str, Enum):
+    CV_RECEIVED = "CV received"
+    ACTION_REQUIRED = "action required"
+    REJECTED = "rejected"
+    HIRED = "hired"
+
+
+class RecrutationInfo(BaseModel):
     company: str = Field(description="The company's name")
     position: str = Field(description="Job position")
-    status: str = Field(description="'CV received', 'Action required: [describe it here in one sentence]', 'Rejected', 'Success'")
+    status: Optional[ApplicationStatus]
+    action: Optional[str] = Field(description=
+                                  ("If an additional action is required, "
+                                   "explain it in one sentence")
+                                  )
 
 
 class MailInfo(BaseModel):
     is_recrutation: bool = Field(
         description="Is this related to job recrutation?"
     )
-    recrutation_status: Optional[RecrutationStatus]
+    recrutation_status: Optional[RecrutationInfo]
 
 
 def get_gemini():

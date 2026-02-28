@@ -25,20 +25,19 @@ async def main():
         if spreadsheet is None:
             spreadsheet = await gsheets.create_spreadsheet(google, sheets,
                                                            sheet_name)
-        print(spreadsheet)
+        # print(spreadsheet)
 
-        # messages = await src.get_messages(google, gmail)
-        # if not messages:
-        #     print("No messages found.")
-        #     return
+        messages = await mails.get_messages(google, gmail)
+        if not messages:
+            print("No messages found.")
+            return
         
-        # for message in messages[:1]:
-        #     print(message["content"])
-        #     analysis = await src.analyze_mail(message["topic"],
-        #                                message["content"],
-        #                                gemini)
-        #     print(analysis.is_recrutation)
-        #     print(message["date"])
+        for message in messages[6:7]:
+            print(message["content"])
+            analysis = await ai.analyze_mail(message["topic"],
+                                       message["content"],
+                                       gemini)
+            print(analysis)
 
 
 if __name__ == "__main__":
