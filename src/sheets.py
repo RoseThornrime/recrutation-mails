@@ -1,3 +1,5 @@
+HEADERS = ["Last update", "Company", "Position", "Status", "Action required"]
+
 
 async def get_drive(google):
     return await google.discover("drive", "v3")
@@ -54,4 +56,17 @@ async def create_spreadsheet(google, sheets, title):
          .create(json=properties, fields="spreadsheetId"))
     )
     sheet_id = result["spreadsheetId"]
-    return await get_spreadsheet(google, sheets, sheet_id)
+    sheet = await get_spreadsheet(google, sheets, sheet_id)
+    first_page = sheet["sheets"][0]["properties"]["title"]
+    await google.as_user(
+            (sheets
+            .spreadsheets
+            .values
+            .append(
+                spreadsheetId=sheet_id,
+                range=first_page,
+                valueInputOption="USER_ENTERED",
+                json={"values": [HEADERS,]}
+            ))
+        )
+    return sheet

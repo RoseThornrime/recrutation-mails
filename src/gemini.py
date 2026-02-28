@@ -13,7 +13,7 @@ class ApplicationStatus(str, Enum):
 
 class RecrutationInfo(BaseModel):
     company: str = Field(description="The company's name")
-    position: str = Field(description="Job position")
+    position: Optional[str] = Field(description="Job position")
     status: Optional[ApplicationStatus]
     action: Optional[str] = Field(description=
                                   ("If an additional action is required, "
