@@ -1,7 +1,13 @@
 from base64 import urlsafe_b64decode
 import email
+import collections
+
+# small hack because backoff used python's older version
+collections.Callable = collections.abc.Callable
+import backoff
 
 from aiogoogle import Aiogoogle
+from aiogoogle.excs import HTTPError
 import asyncio
 
 
@@ -19,6 +25,7 @@ def extract_content(message):
     return parsed.get_content()
 
 
+@backoff.on_exception(backoff.expo, HTTPError, max_tries=8)
 async def get_message_details(google, gmail, message_id):
     message = await google.as_user(
             (gmail

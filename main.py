@@ -21,7 +21,7 @@ async def main():
             print("No messages found.")
             return
         
-        for message in messages[:1]:
+        for message in messages[5:6]:
             print(await analyze_mail(message["topic"],
                                        message["content"],
                                        gemini))

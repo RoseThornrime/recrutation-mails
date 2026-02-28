@@ -3,3 +3,4 @@ credentials.json
 token.json
 .vscode/
 keys.yaml
+src/__pycache__/
