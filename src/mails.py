@@ -6,9 +6,12 @@ import collections
 collections.Callable = collections.abc.Callable
 import backoff
 
-from aiogoogle import Aiogoogle
 from aiogoogle.excs import HTTPError
 import asyncio
+
+
+async def get_gmail(google):
+    return await google.discover("gmail", "v1")
 
 
 def parse_mail(message):
@@ -42,12 +45,14 @@ async def get_message_details(google, gmail, message_id):
             )
     parsed = parse_mail(message)
     return {
+        "id": message_id,
         "topic": message["snippet"],
         "content": extract_content(parsed),
         "date": extract_date(parsed)
     }
 
 
+@backoff.on_exception(backoff.expo, HTTPError, max_tries=8)
 async def get_messages(google, gmail):
     results = await google.as_user(
         (gmail

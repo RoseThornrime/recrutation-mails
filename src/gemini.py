@@ -16,7 +16,6 @@ class MailInfo(BaseModel):
     recrutation_status: Optional[RecrutationStatus]
 
 
-
 def get_gemini():
     return genai.Client().aio
 

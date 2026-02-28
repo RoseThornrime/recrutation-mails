@@ -1,32 +1,44 @@
 from aiogoogle import Aiogoogle
 import asyncio
 
-from src.mails import get_messages
-import src.config as conf
-from src.gemini import get_gemini, analyze_mail
+import src.config as cfg
+import src.gemini as ai
+import src.mails as mails
+import src.sheets as gsheets
 
 
 async def main():
-    config = conf.get_config("keys.yaml")
-    user_creds = conf.get_user_creds(config)
-    client_creds = conf.get_client_creds(config)
-    conf.set_gemini_key(config)
+    config = cfg.get_config("keys.yaml")
+    user_creds = cfg.get_user_creds(config)
+    client_creds = cfg.get_client_creds(config)
+    cfg.set_gemini_key(config)
 
-    gemini = get_gemini()
+    gemini = ai.get_gemini()
     async with Aiogoogle(user_creds=user_creds, client_creds=client_creds) as google:
-        gmail = await google.discover("gmail", "v1")
+        gmail = await mails.get_gmail(google)
+        sheets = await gsheets.get_sheets(google)
+        drive = await gsheets.get_drive(google)
 
-        messages = await get_messages(google, gmail)
-        if not messages:
-            print("No messages found.")
-            return
+        sheet_name = cfg.get_sheet_name(config)
+        spreadsheet = await gsheets.find_spreadsheet(google, drive,
+                                                    sheets, sheet_name)
+        if spreadsheet is None:
+            spreadsheet = await gsheets.create_spreadsheet(google, sheets,
+                                                           sheet_name)
+        print(spreadsheet)
+
+        # messages = await src.get_messages(google, gmail)
+        # if not messages:
+        #     print("No messages found.")
+        #     return
         
-        for message in messages[:1]:
-            print(message["content"])
-            print(await analyze_mail(message["topic"],
-                                       message["content"],
-                                       gemini))
-            print(message["date"])
+        # for message in messages[:1]:
+        #     print(message["content"])
+        #     analysis = await src.analyze_mail(message["topic"],
+        #                                message["content"],
+        #                                gemini)
+        #     print(analysis.is_recrutation)
+        #     print(message["date"])
 
 
 if __name__ == "__main__":

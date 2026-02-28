@@ -27,3 +27,7 @@ def get_client_creds(config):
 
 def set_gemini_key(config):
     os.environ["GEMINI_API_KEY"] = config["gemini_key"]
+
+
+def get_sheet_name(config):
+    return config["sheet_name"]
