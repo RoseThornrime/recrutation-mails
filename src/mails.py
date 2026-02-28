@@ -11,11 +11,14 @@ from aiogoogle.excs import HTTPError
 import asyncio
 
 
-def extract_content(message):
+def parse_mail(message):
     text = urlsafe_b64decode(
         message["raw"]
     ).decode("utf-8")
-    parsed = email.message_from_string(text, policy=email.policy.default)
+    return email.message_from_string(text, policy=email.policy.default)
+
+
+def extract_content(parsed):
     if parsed.is_multipart():
         for part in parsed.walk():
             content_type = part.get_content_type()
@@ -23,6 +26,10 @@ def extract_content(message):
                 return part.get_content()
         return ""
     return parsed.get_content()
+
+
+def extract_date(parsed):
+    return parsed["date"]
 
 
 @backoff.on_exception(backoff.expo, HTTPError, max_tries=8)
@@ -33,9 +40,11 @@ async def get_message_details(google, gmail, message_id):
              .messages
              .get(userId="me", id=message_id["id"], format="raw"))
             )
+    parsed = parse_mail(message)
     return {
         "topic": message["snippet"],
-        "content": extract_content(message)
+        "content": extract_content(parsed),
+        "date": extract_date(parsed)
     }
 
 

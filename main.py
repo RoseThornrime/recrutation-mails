@@ -21,11 +21,12 @@ async def main():
             print("No messages found.")
             return
         
-        for message in messages[5:6]:
+        for message in messages[:1]:
+            print(message["content"])
             print(await analyze_mail(message["topic"],
                                        message["content"],
                                        gemini))
-            # time.sleep(5)
+            print(message["date"])
 
 
 if __name__ == "__main__":
