@@ -20,24 +20,27 @@ async def main():
         drive = await gsheets.get_drive(google)
 
         sheet_name = cfg.get_sheet_name(config)
-        spreadsheet = await gsheets.find_spreadsheet(google, drive,
-                                                    sheets, sheet_name)
-        if spreadsheet is None:
-            spreadsheet = await gsheets.create_spreadsheet(google, sheets,
+        sheet_id = await gsheets.find_spreadsheet(google, drive,
+                                                    sheet_name)
+        if sheet_id is None:
+            sheet_id = await gsheets.create_spreadsheet(google, sheets,
                                                            sheet_name)
-        # print(spreadsheet)
 
         messages = await mails.get_messages(google, gmail)
         if not messages:
             print("No messages found.")
             return
         
-        for message in messages[6:7]:
-            print(message["content"])
-            analysis = await ai.analyze_mail(message["topic"],
-                                       message["content"],
-                                       gemini)
-            print(analysis)
+        analyses = await ai.analyze_mails(messages[8:9], gemini)
+        work_mails = ai.filter_mails(analyses, messages[8:9])
+        spreadsheet = await gsheets.get_spreadsheet_values(google, sheets,
+                                                           sheet_id)
+
+        print(work_mails)
+
+        values = spreadsheet.get('values', [])
+        print(values)
+        print(spreadsheet)
 
 
 if __name__ == "__main__":

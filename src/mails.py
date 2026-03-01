@@ -45,7 +45,7 @@ async def get_message_details(google, gmail, message_id):
             )
     parsed = parse_mail(message)
     return {
-        "id": message_id,
+        "id": message_id["id"],
         "topic": message["snippet"],
         "content": extract_content(parsed),
         "date": extract_date(parsed)

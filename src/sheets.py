@@ -32,19 +32,33 @@ async def list_spreadsheets(google, drive):
             return files
 
 
+def get_first_page(sheet):
+    return sheet["sheets"][0]["properties"]["title"]
+
+
 async def get_spreadsheet(google, sheets, sheet_id):
     return await google.as_user(
+        sheets
+        .spreadsheets
+        .get(spreadsheetId=sheet_id)
+    )
+
+
+async def get_spreadsheet_values(google, sheets, sheet_id):
+    sheet = await get_spreadsheet(google, sheets, sheet_id)
+    return await google.as_user(
                 sheets
-                .spreadsheets
-                .get(spreadsheetId=sheet_id, includeGridData=True)
-    )    
+                .spreadsheets                
+                .values
+                .get(spreadsheetId=sheet_id, range=get_first_page(sheet))
+    )
 
 
-async def find_spreadsheet(google, drive, sheets, title):
+async def find_spreadsheet(google, drive, title):
     spreadsheets = await list_spreadsheets(google, drive)
     for file in spreadsheets:
         if file["name"] == title:
-            return await get_spreadsheet(google, sheets, file["id"])
+            return file["id"]
     return None
 
 
@@ -57,7 +71,7 @@ async def create_spreadsheet(google, sheets, title):
     )
     sheet_id = result["spreadsheetId"]
     sheet = await get_spreadsheet(google, sheets, sheet_id)
-    first_page = sheet["sheets"][0]["properties"]["title"]
+    first_page = get_first_page(sheet)
     await google.as_user(
             (sheets
             .spreadsheets
@@ -69,4 +83,4 @@ async def create_spreadsheet(google, sheets, title):
                 json={"values": [HEADERS,]}
             ))
         )
-    return sheet
+    return sheet_id
