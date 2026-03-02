@@ -3,6 +3,7 @@ import collections
 # small hack because backoff used python's older version
 collections.Callable = collections.abc.Callable
 import backoff
+from aiogoogle.excs import HTTPError
 
 
 HEADERS = ["Last update", "Company", "Position", "Status", "Action required"]
