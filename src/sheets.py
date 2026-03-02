@@ -46,12 +46,13 @@ async def get_spreadsheet(google, sheets, sheet_id):
 
 async def get_spreadsheet_values(google, sheets, sheet_id):
     sheet = await get_spreadsheet(google, sheets, sheet_id)
-    return await google.as_user(
+    result = await google.as_user(
                 sheets
                 .spreadsheets                
                 .values
                 .get(spreadsheetId=sheet_id, range=get_first_page(sheet))
     )
+    return result["values"][1:]
 
 
 async def find_spreadsheet(google, drive, title):
@@ -84,3 +85,44 @@ async def create_spreadsheet(google, sheets, title):
             ))
         )
     return sheet_id
+
+
+def find_recrutation(sheet_data, company, position):
+    for index, row in enumerate(sheet_data):
+        _, row_company, row_position, _, _ = row
+        if company == row_company and row_position == position:
+            return index
+    return None
+
+
+def update_data_locally(filtered_mails, sheet_data):
+    for mail in filtered_mails:
+        index = find_recrutation(sheet_data, mail["company"],
+                                 mail["position"])
+        to_save = [
+                mail["last_update"],
+                mail["company"],
+                mail["position"],
+                mail["status"],
+                mail["action"]
+        ]
+        if index is not None:
+            sheet_data[index] = to_save
+        else:
+            sheet_data.append(to_save)
+
+
+async def update_data_sheet(google, sheets, sheet_data, sheet_id):
+    sheet = await get_spreadsheet(google, sheets, sheet_id)
+    sheet_data = [HEADERS,] + sheet_data
+    await google.as_user(
+        sheets
+        .spreadsheets
+        .values
+        .update(
+            spreadsheetId=sheet_id,
+            range=get_first_page(sheet),
+            valueInputOption="USER_ENTERED",
+            json={"values": sheet_data}
+        )
+    )

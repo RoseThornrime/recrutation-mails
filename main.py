@@ -35,12 +35,8 @@ async def main():
         work_mails = ai.filter_mails(analyses, messages[8:9])
         spreadsheet = await gsheets.get_spreadsheet_values(google, sheets,
                                                            sheet_id)
-
-        print(work_mails)
-
-        values = spreadsheet.get('values', [])
-        print(values)
-        print(spreadsheet)
+        gsheets.update_data_locally(work_mails, spreadsheet)
+        await gsheets.update_data_sheet(google, sheets, spreadsheet, sheet_id)
 
 
 if __name__ == "__main__":
