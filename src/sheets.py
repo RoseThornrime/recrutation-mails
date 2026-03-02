@@ -1,3 +1,10 @@
+import collections
+
+# small hack because backoff used python's older version
+collections.Callable = collections.abc.Callable
+import backoff
+
+
 HEADERS = ["Last update", "Company", "Position", "Status", "Action required"]
 
 
@@ -9,6 +16,7 @@ async def get_sheets(google):
     return await google.discover("sheets", "v4")
 
 
+@backoff.on_exception(backoff.expo, HTTPError, max_tries=8)
 async def list_spreadsheets(google, drive):
     page_token = None
     files = []
@@ -36,6 +44,7 @@ def get_first_page(sheet):
     return sheet["sheets"][0]["properties"]["title"]
 
 
+@backoff.on_exception(backoff.expo, HTTPError, max_tries=8)
 async def get_spreadsheet(google, sheets, sheet_id):
     return await google.as_user(
         sheets
@@ -44,6 +53,7 @@ async def get_spreadsheet(google, sheets, sheet_id):
     )
 
 
+@backoff.on_exception(backoff.expo, HTTPError, max_tries=8)
 async def get_spreadsheet_values(google, sheets, sheet_id):
     sheet = await get_spreadsheet(google, sheets, sheet_id)
     result = await google.as_user(
@@ -63,6 +73,7 @@ async def find_spreadsheet(google, drive, title):
     return None
 
 
+@backoff.on_exception(backoff.expo, HTTPError, max_tries=8)
 async def create_spreadsheet(google, sheets, title):
     properties = {"properties": {"title": title}}
     result = await google.as_user(
@@ -112,6 +123,7 @@ def update_data_locally(filtered_mails, sheet_data):
             sheet_data.append(to_save)
 
 
+@backoff.on_exception(backoff.expo, HTTPError, max_tries=8)
 async def update_data_sheet(google, sheets, sheet_data, sheet_id):
     sheet = await get_spreadsheet(google, sheets, sheet_id)
     sheet_data = [HEADERS,] + sheet_data
