@@ -36,9 +36,8 @@ async def main():
                 return
             
             messages = messages[::-1]
-            analyses_num = 10
-            analyses = await ai.analyze_mails(messages[:analyses_num], gemini)
-            work_mails = ai.filter_mails(analyses, messages[:analyses_num])
+            analyses = await ai.analyze_mails(messages, gemini)
+            work_mails = ai.filter_mails(analyses, messages)
             print(f"Job-related messages found: {len(work_mails)}")
             if not work_mails:
                 print("No work messages found.")
@@ -48,7 +47,10 @@ async def main():
             gsheets.update_data_locally(work_mails, spreadsheet)
             await gsheets.update_data_sheet(google, sheets, spreadsheet, sheet_id)
             print("Spreadsheet updated")
-            await mails.change_labels(google, gmail, work_mails)
+
+            possible_labels = await mails.get_labels(google, gmail)
+            await mails.create_missing_labels(google, gmail, possible_labels)
+            await mails.change_message_labels(google, gmail, work_mails, possible_labels)
             print("Work mails moved")
     except (HTTPError, UnboundLocalError, ClientError) as e:
         print(f"Error found: {e}")
