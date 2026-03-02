@@ -32,11 +32,10 @@ class RecrutationInfo(BaseModel):
 
 
 class MailInfo(BaseModel):
-    is_recrutation: bool = Field(
-        description=("Is this related to some specific job recrutation "
-                     "I attended? Ignore generic recrutation ads")
+    recrutation_info: Optional[RecrutationInfo] = Field(
+        description=("Set it only if the message is related to specific "
+                     "job recrutation I attended. Ignore recrutation ads.")
     )
-    recrutation_info: Optional[RecrutationInfo]
 
 
 def get_gemini():
@@ -66,10 +65,10 @@ async def analyze_mail(topic, content, gemini):
 def filter_mails(analyses, messages):
     work_mails = []
     for analysis, message in zip(analyses, messages):
-        if not analysis.is_recrutation:
-            continue
         info = analysis.recrutation_info
-        mail_info = {
+        if not info:
+            continue
+        work_mail = {
             "last_update": message["date"],
             "company": info.company,
             "position": info.position if info.position is not None else "-",
@@ -77,7 +76,7 @@ def filter_mails(analyses, messages):
             "action": info.action if info.action is not None else "-",
             "id": message["id"]
         }
-        work_mails.append(mail_info)
+        work_mails.append(work_mail)
     return work_mails
 
 
