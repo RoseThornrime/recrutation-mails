@@ -1,6 +1,7 @@
 from base64 import urlsafe_b64decode
 import email
 import collections
+from datetime import datetime
 
 # small hack because backoff used python's older version
 collections.Callable = collections.abc.Callable
@@ -32,7 +33,10 @@ def extract_content(parsed):
 
 
 def extract_date(parsed):
-    return parsed["date"]
+    date_str = parsed["date"]
+    dt = datetime.strptime(date_str, "%a, %d %b %Y %H:%M:%S %z")
+    formatted = dt.strftime("%Y-%m-%d %H:%M:%S")
+    return formatted
 
 
 @backoff.on_exception(backoff.expo, HTTPError, max_tries=8)

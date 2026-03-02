@@ -1,6 +1,10 @@
 from enum import Enum
 from typing import Optional
+import collections
 
+# small hack because backoff used python's older version
+collections.Callable = collections.abc.Callable
+import backoff
 from google import genai
 from pydantic import BaseModel, Field
 import asyncio
@@ -34,6 +38,7 @@ def get_gemini():
     return genai.Client().aio
 
 
+@backoff.on_exception(backoff.expo, UnboundLocalError, max_tries=8)
 async def analyze_mail(topic, content, gemini):
     model = "gemini-3-flash-preview"
     prompt = f"Topic: {topic}. Content: {content}"
