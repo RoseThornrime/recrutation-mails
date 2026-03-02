@@ -21,16 +21,19 @@ class RecrutationInfo(BaseModel):
     company: str = Field(description="The company's name")
     position: Optional[str] = Field(description="Job position")
     status: Optional[ApplicationStatus]
-    action: Optional[str] = Field(description=
-                                  ("If I need to take an action to be "
-                                   "recruited (e.g. do some test), "
-                                   "explain it in one sentence, in english")
-                                  )
+    action: Optional[str] = Field(
+        description=("If I need to take an action to be "
+                    "recruited (e.g. do some test), "
+                    "explain it in one sentence."
+                    "Use it only if status is "
+                    "'action required'")
+                    )
 
 
 class MailInfo(BaseModel):
     is_recrutation: bool = Field(
-        description="Is this related to job recrutation?"
+        description=("Is this related to some specific job recrutation "
+                     "I attended? Ignore generic recrutation ads")
     )
     recrutation_info: Optional[RecrutationInfo]
 
@@ -68,9 +71,9 @@ def filter_mails(analyses, messages):
         mail_info = {
             "last_update": message["date"],
             "company": info.company,
-            "position": info.position if info.position is not None else "",
-            "status": info.status.value if info.status is not None else "",
-            "action": info.action if info.action is not None else "",
+            "position": info.position if info.position is not None else "-",
+            "status": info.status.value if info.status is not None else "-",
+            "action": info.action if info.action is not None else "-",
             "id": message["id"]
         }
         work_mails.append(mail_info)
