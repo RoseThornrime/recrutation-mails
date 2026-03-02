@@ -40,7 +40,7 @@ def extract_date(parsed):
     return formatted
 
 
-@backoff.on_exception(backoff.expo, HTTPError, max_tries=8)
+@backoff.on_exception(backoff.expo, HTTPError, max_tries=32)
 async def get_message_details(google, gmail, message_id):
     message = await google.as_user(
             (gmail
@@ -57,7 +57,7 @@ async def get_message_details(google, gmail, message_id):
     }
 
 
-@backoff.on_exception(backoff.expo, HTTPError, max_tries=8)
+@backoff.on_exception(backoff.expo, HTTPError, max_tries=32)
 async def get_messages(google, gmail):
     message_ids = []
     page_token = None
@@ -82,7 +82,7 @@ async def get_messages(google, gmail):
     return await asyncio.gather(*message_tasks)
 
 
-@backoff.on_exception(backoff.expo, HTTPError, max_tries=8)
+@backoff.on_exception(backoff.expo, HTTPError, max_tries=32)
 async def get_labels(google, gmail):
     current_labels = await google.as_user(
             (gmail
@@ -102,7 +102,7 @@ async def get_labels(google, gmail):
     return result
 
 
-@backoff.on_exception(backoff.expo, HTTPError, max_tries=8)
+@backoff.on_exception(backoff.expo, HTTPError, max_tries=32)
 async def create_missing_labels(google, gmail, labels):
     tasks = []
     for label_name, label_id in labels.items():
@@ -129,7 +129,7 @@ async def create_missing_labels(google, gmail, labels):
             labels["name"] = label["id"]
 
 
-@backoff.on_exception(backoff.expo, HTTPError, max_tries=8)
+@backoff.on_exception(backoff.expo, HTTPError, max_tries=32)
 async def change_message_labels(google, gmail, messages, possible_labels):
     tasks = []
     for message in messages:

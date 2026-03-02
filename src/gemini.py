@@ -44,7 +44,7 @@ def get_gemini():
 
 @backoff.on_exception(backoff.expo,
                     (UnboundLocalError, ClientError),
-                    max_tries=8)
+                    max_tries=32)
 async def analyze_mail(topic, content, gemini):
     model = "gemini-3-flash-preview"
     prompt = f"Topic: {topic}. Content: {content}"
