@@ -89,6 +89,7 @@ async def create_spreadsheet(google, sheets, title):
 
 def find_recrutation(sheet_data, company, position):
     for index, row in enumerate(sheet_data):
+        print(row)
         _, row_company, row_position, _, _ = row
         if company == row_company and row_position == position:
             return index

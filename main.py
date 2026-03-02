@@ -31,8 +31,8 @@ async def main():
             print("No messages found.")
             return
         
-        analyses = await ai.analyze_mails(messages[8:9], gemini)
-        work_mails = ai.filter_mails(analyses, messages[8:9])
+        analyses = await ai.analyze_mails(messages[4:9], gemini)
+        work_mails = ai.filter_mails(analyses, messages[4:9])
         spreadsheet = await gsheets.get_spreadsheet_values(google, sheets,
                                                            sheet_id)
         gsheets.update_data_locally(work_mails, spreadsheet)

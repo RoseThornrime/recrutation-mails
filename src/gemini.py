@@ -39,7 +39,9 @@ def get_gemini():
     return genai.Client().aio
 
 
-@backoff.on_exception(backoff.expo, UnboundLocalError, max_tries=8)
+@backoff.on_exception(backoff.expo,
+                    (UnboundLocalError, genai.errors.ClientError),
+                    max_tries=8)
 async def analyze_mail(topic, content, gemini):
     model = "gemini-3-flash-preview"
     prompt = f"Topic: {topic}. Content: {content}"
@@ -67,7 +69,7 @@ def filter_mails(analyses, messages):
             "last_update": message["date"],
             "company": info.company,
             "position": info.position if info.position is not None else "",
-            "status": info.status.value,
+            "status": info.status.value if info.status is not None else "",
             "action": info.action if info.action is not None else "",
             "id": message["id"]
         }
