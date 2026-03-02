@@ -22,8 +22,9 @@ class RecrutationInfo(BaseModel):
     position: Optional[str] = Field(description="Job position")
     status: Optional[ApplicationStatus]
     action: Optional[str] = Field(description=
-                                  ("If an additional action is required, "
-                                   "explain it in one sentence")
+                                  ("If I need to take an action to be "
+                                   "recruited (e.g. do some test), "
+                                   "explain it in one sentence, in english")
                                   )
 
 
