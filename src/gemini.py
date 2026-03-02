@@ -6,6 +6,7 @@ import collections
 collections.Callable = collections.abc.Callable
 import backoff
 from google import genai
+from google.genai.errors import ClientError
 from pydantic import BaseModel, Field
 import asyncio
 
@@ -43,7 +44,7 @@ def get_gemini():
 
 
 @backoff.on_exception(backoff.expo,
-                    (UnboundLocalError, genai.errors.ClientError),
+                    (UnboundLocalError, ClientError),
                     max_tries=8)
 async def analyze_mail(topic, content, gemini):
     model = "gemini-3-flash-preview"
