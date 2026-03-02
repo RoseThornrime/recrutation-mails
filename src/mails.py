@@ -57,14 +57,44 @@ async def get_message_details(google, gmail, message_id):
 
 @backoff.on_exception(backoff.expo, HTTPError, max_tries=8)
 async def get_messages(google, gmail):
-    results = await google.as_user(
-        (gmail
-         .users
-         .messages
-         .list(userId="me", labelIds=["INBOX"]))
-    )
-    message_ids = results.get("messages", [])
+    message_ids = []
+    page_token = None
+    while True:
+        results = await google.as_user(
+            gmail
+            .users
+            .messages
+            .list(
+                userId="me",
+                labelIds=["INBOX"],
+                pageToken=page_token
+            )
+        )
+        message_ids.extend(results.get("messages", []))
+        page_token = results.get("nextPageToken")
+        if not page_token:
+            break
     message_tasks = []
     for message_id in message_ids:
         message_tasks.append(get_message_details(google, gmail, message_id))
     return await asyncio.gather(*message_tasks)
+
+
+@backoff.on_exception(backoff.expo, HTTPError, max_tries=8)
+async def change_labels(google, gmail, messages):
+    tasks = []
+    for message in messages:
+        body = {
+            "addLabelIds": f"work: {message["status"]}",
+            "removeLabelIds": "INBOX"
+        }
+        task = google.as_user(
+            gmail
+            .users
+            .messages
+            .modify(userId="me",
+                    id=message["id"],
+                    json=body)
+        )
+        tasks.append(task)
+    await asyncio.gather(*tasks)
