@@ -100,11 +100,16 @@ async def create_spreadsheet(google, sheets, title):
     return sheet_id
 
 
+def are_texts_similiar(text1, text2):
+    return text1.startswith(text2) or text2.startswith(text1)
+
+
 def find_recrutation(sheet_data, company, position):
     for index, row in enumerate(sheet_data):
         _, row_company, row_position, _, _ = row
-        if company == row_company and row_position == position:
-            return index
+        if (are_texts_similiar(company, row_company)
+            and are_texts_similiar(position, row_position)):
+                return index
     return None
 
 

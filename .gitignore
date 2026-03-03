@@ -4,3 +4,4 @@ token.json
 .vscode/
 keys.yaml
 src/__pycache__/
+mails_cache.txt

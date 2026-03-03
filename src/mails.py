@@ -131,21 +131,33 @@ async def create_missing_labels(google, gmail, labels):
 
 @backoff.on_exception(backoff.expo, HTTPError, max_tries=32)
 async def change_message_labels(google, gmail, messages, possible_labels):
-    tasks = []
+    grouped = collections.defaultdict(list)
+
     for message in messages:
-        label_name = f"work/{message["status"]}"
+        grouped[message["status"]].append(message["id"])
+
+    tasks = []
+
+    for status, message_ids in grouped.items():
+        label_name = f"work/{status}"
         label_id = possible_labels[label_name]
+
         body = {
-            "addLabelIds": [label_id,],
-            "removeLabelIds": ["INBOX",]
+            "ids": message_ids,
+            "addLabelIds": [label_id],
+            "removeLabelIds": ["INBOX"]
         }
+
         task = google.as_user(
             gmail
             .users
             .messages
-            .modify(userId="me",
-                    id=message["id"],
-                    json=body)
+            .batchModify(
+                userId="me",
+                json=body
+            )
         )
+
         tasks.append(task)
+
     await asyncio.gather(*tasks)
