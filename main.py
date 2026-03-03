@@ -15,7 +15,7 @@ async def main():
     try:
         path = "mails_cache.txt"
         cached = await cache.read_message_ids(path)
-        config = cfg.get_config("keys.yaml")
+        config = await cfg.get_config("keys.yaml")
         user_creds = cfg.get_user_creds(config)
         client_creds = cfg.get_client_creds(config)
         cfg.set_gemini_key(config)

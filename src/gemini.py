@@ -10,8 +10,11 @@ from google.genai.errors import ClientError
 from pydantic import BaseModel, Field
 import asyncio
 
+from src.aliases import Message, WorkMail, GeminiClient
+
 
 class ApplicationStatus(str, Enum):
+    """Job application status"""
     CV_RECEIVED = "CV received"
     ACTION_REQUIRED = "action required"
     REJECTED = "rejected"
@@ -19,6 +22,7 @@ class ApplicationStatus(str, Enum):
 
 
 class RecrutationInfo(BaseModel):
+    """Info about job recrutation"""
     company: str = Field(description="The company's name")
     position: Optional[str] = Field(description="Job position")
     status: ApplicationStatus
@@ -32,20 +36,24 @@ class RecrutationInfo(BaseModel):
 
 
 class MailInfo(BaseModel):
+    """Mail classification data"""
     recrutation_info: Optional[RecrutationInfo] = Field(
         description=("Set it only if the message is related to specific "
                      "job recrutation I attended. Ignore recrutation ads.")
     )
 
 
-def get_gemini():
+def get_gemini() -> GeminiClient:
+    """Get Gemini client instance"""
     return genai.Client().aio
 
 
 @backoff.on_exception(backoff.expo,
                     (UnboundLocalError, ClientError),
                     max_tries=32)
-async def analyze_mail(topic, content, gemini):
+async def analyze_mail(topic: str, content: str,
+                       gemini: GeminiClient) -> MailInfo:
+    """Classify email message"""
     model = "gemini-3-flash-preview"
     prompt = f"Topic: {topic}. Content: {content}"
     response = await gemini.models.generate_content(
@@ -59,7 +67,9 @@ async def analyze_mail(topic, content, gemini):
     return MailInfo.model_validate_json(response.text)
 
 
-def filter_mails(analyses, messages):
+def filter_mails(analyses: MailInfo, messages: list[Message]
+                 ) -> list[WorkMail]:
+    """Return list of mails related to recrutation"""
     work_mails = []
     for analysis, message in zip(analyses, messages):
         info = analysis.recrutation_info
@@ -77,7 +87,9 @@ def filter_mails(analyses, messages):
     return work_mails
 
 
-async def analyze_mails(messages, gemini):
+async def analyze_mails(messages: list[Message], gemini: GeminiClient
+                        ) -> list[MailInfo]:
+    """Classify multiple mails at once"""
     tasks = []
     for message in messages:
         task = analyze_mail(message["topic"],
