@@ -18,7 +18,7 @@ python3 main.py
 5. ~~if a mail is related to work, classify it by~~
 6. ~~store the data in a csv file~~
 7. ~~generate a google sheet with my data~~
-8. ~~also move read mails into special mail directory (so I wont see them)~
+8. ~~also move read mails into special mail directory (so I wont see them)~~
 9. ~~do some logs~~
 10. add a webhook/discord bot
 11. host the app somewhere
