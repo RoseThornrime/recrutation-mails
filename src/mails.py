@@ -24,7 +24,11 @@ def parse_mail(message: GmailMessage) -> EmailMessage:
     """Parse Gmail message into python email type"""
     text = urlsafe_b64decode(
         message["raw"]
-    ).decode("utf-8")
+    )
+    try:
+        text = text.decode("utf-8")
+    except UnicodeDecodeError:
+        text = text.decode("cp1252")
     return email.message_from_string(text, policy=email.policy.default)
 
 
