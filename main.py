@@ -36,7 +36,7 @@ async def main():
             messages = await mails.get_messages(google, gmail)
             print(f"Messages found: {len(messages)}")
             if not messages:
-                print("No messages found.")
+                print("No messages found")
                 return
                         
             messages = [msg for msg in messages[::-1]
@@ -48,7 +48,8 @@ async def main():
             work_mails = ai.filter_mails(analyses, messages)
             print(f"Job-related messages found: {len(work_mails)}")
             if not work_mails:
-                print("No work messages found.")
+                print("No job-related messages found")
+                return
 
             spreadsheet = await gsheets.get_spreadsheet_values(google, sheets,
                                                             sheet_id)

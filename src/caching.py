@@ -8,4 +8,5 @@ async def save_message_ids(ids, path):
 
 async def read_message_ids(path):
     async with aiofiles.open(path, "a+") as f:
-        return await f.readlines()
+        await f.seek(0)
+        return [line.rstrip() for line in await f.readlines()]
