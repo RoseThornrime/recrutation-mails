@@ -9,6 +9,7 @@ from google import genai
 from google.genai.errors import ClientError
 from pydantic import BaseModel, Field
 import asyncio
+from google.genai.errors import ClientError
 
 from src.aliases import Message, WorkMail, GeminiClient
 
@@ -89,11 +90,15 @@ def filter_mails(analyses: MailInfo, messages: list[Message]
 
 async def analyze_mails(messages: list[Message], gemini: GeminiClient
                         ) -> list[MailInfo]:
-    """Classify multiple mails at once"""
-    tasks = []
+    """Classify multiple mails"""
+    results = []
     for message in messages:
-        task = analyze_mail(message["topic"],
-                            message["content"],
-                            gemini)
-        tasks.append(task)
-    return await asyncio.gather(*tasks)
+        try:
+            result = await analyze_mail(message["topic"],
+                                message["content"],
+                                gemini)
+        except ClientError:
+            print("Gemini API limits exceeded")
+            return results
+        results.append(result)            
+    return results
