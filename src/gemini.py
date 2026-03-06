@@ -8,8 +8,7 @@ import backoff
 from google import genai
 from google.genai.errors import ClientError
 from pydantic import BaseModel, Field
-import asyncio
-from google.genai.errors import ClientError
+from google.genai.errors import ClientError, ServerError
 
 from src.aliases import Message, WorkMail, GeminiClient
 
@@ -97,8 +96,8 @@ async def analyze_mails(messages: list[Message], gemini: GeminiClient
             result = await analyze_mail(message["topic"],
                                 message["content"],
                                 gemini)
-        except ClientError:
-            print("Gemini API limits exceeded")
+        except (ClientError, UnboundLocalError, ServerError) as e:
+            print(f"Gemini API error: {e}")
             return results
         results.append(result)            
     return results

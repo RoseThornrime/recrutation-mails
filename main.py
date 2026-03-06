@@ -1,7 +1,6 @@
 from aiogoogle import Aiogoogle
 import asyncio
 from aiogoogle.excs import HTTPError
-from google.genai.errors import ServerError
 from aiohttp.client_exceptions import ClientConnectorDNSError
 
 import src.config as cfg
@@ -64,8 +63,7 @@ async def main():
             await mails.change_message_labels(google, gmail, work_mails,
                                               possible_labels)
             print("Work mails moved")
-    except (HTTPError, UnboundLocalError, ServerError,
-            ClientConnectorDNSError) as e:
+    except (HTTPError, ClientConnectorDNSError) as e:
         print(f"Error found: {e}")
         return
 
