@@ -50,7 +50,7 @@ def get_gemini() -> GeminiClient:
 
 @backoff.on_exception(backoff.expo,
                     (UnboundLocalError, ClientError),
-                    max_tries=32)
+                    max_tries=8)
 async def analyze_mail(topic: str, content: str,
                        gemini: GeminiClient) -> MailInfo:
     """Classify email message"""
