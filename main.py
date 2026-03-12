@@ -79,11 +79,12 @@ async def main():
             gmail, sheets, drive, gemini = await get_clients(google, config)
             sheet_id = await start_spreadsheet(config, google, drive, sheets)
             messages = await mails.get_messages(google, gmail)
-            print(f"Messages found: {len(messages)}")
+            print(f"Messages in inbox: {len(messages)}")
             if not messages:
                 print("No messages found")
                 return
             messages = get_noncached_mails(messages, cached)
+            print(f"New messages found: {len(messages)}")
             analyses = await ai.analyze_mails(messages, gemini)
             work_mails = ai.filter_mails(analyses, messages)
             print(f"Job-related messages found: {len(work_mails)}")
