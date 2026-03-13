@@ -43,6 +43,9 @@ class MailInfo(BaseModel):
     )
 
 
+Analysis = tuple[MailInfo, str, str]
+
+
 def get_gemini() -> GeminiClient:
     """Get Gemini client instance"""
     return genai.Client().aio
@@ -67,37 +70,36 @@ async def analyze_mail(topic: str, content: str,
     return MailInfo.model_validate_json(response.text)
 
 
-def filter_mails(analyses: MailInfo, messages: list[Message]
-                 ) -> list[WorkMail]:
+def filter_mails(analyses: list[Analysis]) -> list[WorkMail]:
     """Return list of mails related to recrutation"""
     work_mails = []
-    for analysis, message in zip(analyses, messages):
+    for analysis, id_, date in analyses:
         info = analysis.recrutation_info
         if not info:
             continue
         work_mail = {
-            "last_update": message["date"],
+            "last_update": date,
             "company": info.company,
             "position": info.position if info.position is not None else "-",
             "status": info.status.value,
             "action": info.action if info.action is not None else "-",
-            "id": message["id"]
+            "id": id_
         }
         work_mails.append(work_mail)
     return work_mails
 
 
 async def analyze_mails(messages: list[Message], gemini: GeminiClient
-                        ) -> list[MailInfo]:
+                        ) -> list[Analysis]:
     """Classify multiple mails"""
     results = []
     for message in messages:
         try:
-            result = await analyze_mail(message["topic"],
+            analysis = await analyze_mail(message["topic"],
                                 message["content"],
                                 gemini)
         except (ClientError, UnboundLocalError, ServerError) as e:
             print(f"Gemini API error: {e}")
             return results
-        results.append(result)            
+        results.append((analysis, message["id"], message["date"]))            
     return results

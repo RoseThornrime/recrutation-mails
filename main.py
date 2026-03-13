@@ -61,14 +61,8 @@ async def get_clients(google: Aiogoogle, config: aliases.Config
     return gmail, sheets, drive, gemini
 
 
-def get_noncached_mails(messages: list[aliases.Message], cached: list[str]
-                        ) -> list[aliases.Message]:
-    """Get mails that are not already cached"""
-    return [msg for msg in messages[::-1] if msg["id"] not in cached]
-    
-
 async def main():
-    messages = []
+    analyses = []
     cached = await cache.read_message_ids(CACHE_PATH)
     config = await cfg.get_config("keys.yaml")
     user_creds = cfg.get_user_creds(config)
@@ -83,10 +77,10 @@ async def main():
             if not messages:
                 print("No messages found")
                 return
-            messages = get_noncached_mails(messages, cached)
+            messages = cache.get_noncached_mails(messages, cached)
             print(f"New messages found: {len(messages)}")
             analyses = await ai.analyze_mails(messages, gemini)
-            work_mails = ai.filter_mails(analyses, messages)
+            work_mails = ai.filter_mails(analyses)
             print(f"Job-related messages found: {len(work_mails)}")
             if not work_mails:
                 print("No job-related messages found")
@@ -96,7 +90,7 @@ async def main():
     except (HTTPError, ClientConnectorDNSError) as e:
         print(f"Error found: {e}")
         return
-    cached.extend([msg["id"] for msg in messages])
+    cache.add_to_cache(analyses, cached)
     await cache.save_message_ids(cached, CACHE_PATH)
 
 
